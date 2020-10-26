@@ -8,6 +8,7 @@
     "url": "https://github.com/mrozbarry/mobtime.git"
   },
   "scripts": {
+    "build": "npm run tailwind:prod",
     "dev": "nodemon --ignore public ./index.js",
     "tailwind:dev": "postcss ./src/styles/index.css -o ./public/styles/styles.css",
     "tailwind:prod": "cross-env NODE_ENV=production postcss ./src/styles/index.css -o ./public/styles/styles.css",
