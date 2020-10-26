@@ -2,34 +2,46 @@
   "name": "mobtime",
   "version": "1.4.0",
   "main": "index.js",
-  "license": "MIT", "repository": {
+  "license": "MIT",
+  "repository": {
     "type": "git",
     "url": "https://github.com/mrozbarry/mobtime.git"
   },
   "scripts": {
     "dev": "nodemon --ignore public ./index.js",
+    "tailwind:dev": "postcss ./src/styles/index.css -o ./public/styles/styles.css",
+    "tailwind:prod": "cross-env NODE_ENV=production postcss ./src/styles/index.css -o ./public/styles/styles.css",
     "start": "node ./index.js",
-    "lint": "eslint .",
+    "lint": "prettier-eslint .",
     "deploy": "node ./deploy/index.js",
     "test": "ava",
     "test:coverage": "nyc ava"
   },
   "dependencies": {
     "@mrbarrysoftware/js-enumerize": "^1.1.0",
+    "autoprefixer": "^10.0.1",
     "body-parser": "^1.19.0",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "ferp": "^1.2.0",
     "helmet": "^3.21.3",
     "nodemon": "^2.0.2",
+    "postcss": "^8.1.1",
+    "postcss-cli": "^8.0.0",
+    "prettier-eslint-cli": "^5.0.0",
     "semver": "^7.1.3",
+    "tailwindcss": "^1.8.10",
     "ws": "^7.2.3"
   },
   "devDependencies": {
     "ava": "^3.11.1",
+    "cross-env": "^7.0.2",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-config-prettier": "^6.12.0",
     "eslint-plugin-import": "^2.20.1",
+    "husky": ">=4",
+    "lint-staged": ">=10",
     "nyc": "^15.1.0",
     "resolve": "^1.15.1",
     "sinon": "^9.0.3"
@@ -47,5 +59,20 @@
     ],
     "verbose": true
   },
-  "private": true
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": true
+  },
+  "private": true,
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": "prettier-eslint --write"
+  }
 }

@@ -1,4 +1,5 @@
 /* eslint-disable import/no-absolute-path, import/extensions, import/no-unresolved */
+import { roundToSeconds } from './lib/roundToSeconds.js';
 
 const TimerFX = (dispatch, { timerStartedAt, timerDuration, actions }) => {
   let cancel = false;
@@ -14,40 +15,31 @@ const TimerFX = (dispatch, { timerStartedAt, timerDuration, actions }) => {
 
     const currentTime = Date.now();
     dispatch(actions.SetCurrentTime, {
-      currentTime,
+      currentTime: roundToSeconds(currentTime),
       documentElement: document,
     });
-    const elapsed = currentTime - timerStartedAt;
+    const elapsed = roundToSeconds(currentTime) - timerStartedAt;
 
-    if (elapsed >= timerDuration) {
-      cleanup();
+    if (timerStartedAt !== null && elapsed >= timerDuration) {
       dispatch(actions.Completed, {
         isEndOfTurn: true,
         documentElement: document,
         Notification: window.Notification,
       });
-      return;
     }
 
     handle = setTimeout(tick, 100);
   };
 
-  if (timerStartedAt) {
-    handle = setTimeout(tick, 0);
-  }
+  handle = setTimeout(tick, 0);
 
   return cleanup;
 };
-export const Timer = (props) => [TimerFX, props];
+export const Timer = props => [TimerFX, props];
 
-const WebsocketFX = (dispatch, {
-  timerId,
-  actions,
-}) => {
+const WebsocketFX = (dispatch, { timerId, actions }) => {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const websocketAddress = (
-    `${protocol}://${window.location.hostname}:${window.location.port}/${timerId}`
-  );
+  const websocketAddress = `${protocol}://${window.location.hostname}:${window.location.port}/${timerId}`;
 
   let socket = null;
   let cancel = false;
@@ -63,17 +55,14 @@ const WebsocketFX = (dispatch, {
       dispatch(actions.BroadcastJoin);
     });
 
-    socket.addEventListener('message', (event) => {
+    socket.addEventListener('message', event => {
       const payload = JSON.parse(event.data);
 
-      dispatch(
-        actions.UpdateByWebsocketData,
-        {
-          payload,
-          documentElement: document,
-          Notification: window.Notification,
-        },
-      );
+      dispatch(actions.UpdateByWebsocketData, {
+        payload,
+        documentElement: document,
+        Notification: window.Notification,
+      });
     });
 
     socket.addEventListener('close', () => {
@@ -82,7 +71,7 @@ const WebsocketFX = (dispatch, {
       setTimeout(connect, 1000);
     });
 
-    socket.addEventListener('error', (event) => {
+    socket.addEventListener('error', event => {
       if (cancel) return;
 
       console.warn('Socket error', event);
@@ -102,25 +91,24 @@ const WebsocketFX = (dispatch, {
     socket = null;
   };
 };
-export const Websocket = (props) => [WebsocketFX, props];
-
+export const Websocket = props => [WebsocketFX, props];
 
 const DragAndDropFX = (dispatch, props) => {
-  const onMove = (event) => {
+  const onMove = event => {
     dispatch(props.DragMove, {
       clientX: event.pageX,
       clientY: event.pageY,
     });
   };
 
-  const onMouseUp = (event) => {
+  const onMouseUp = event => {
     if (props.active) {
       event.preventDefault();
     }
     dispatch(props.DragEnd);
   };
 
-  const onKeyUp = (event) => {
+  const onKeyUp = event => {
     if (event.key !== 'Escape') {
       return;
     }
@@ -137,4 +125,4 @@ const DragAndDropFX = (dispatch, props) => {
     document.removeEventListener('keyup', onKeyUp);
   };
 };
-export const DragAndDrop = (props) => [DragAndDropFX, props];
+export const DragAndDrop = props => [DragAndDropFX, props];

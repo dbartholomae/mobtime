@@ -2,98 +2,126 @@
 
 import formatTime from './formatTime.js';
 
-const fx = (effect) => (props) => [effect, props];
+const fx = effect => props => [effect, props];
 
 const sendMessage = (websocket, type, json = {}) => {
-  websocket.send(JSON.stringify({
-    type,
-    ...json,
-  }));
+  websocket.send(
+    JSON.stringify({
+      type,
+      ...json,
+    }),
+  );
 };
 
-export const UpdateSettings = fx(function UpdateSettingsFX(_dispatch, {
-  websocket,
-  settings,
-}) {
+export const UpdateSettings = fx(function UpdateSettingsFX(
+  _dispatch,
+  { websocket, settings },
+) {
   return sendMessage(websocket, 'settings:update', { settings });
 });
 
-export const BroadcastJoin = fx(function UpdateSettingsFX(_dispatch, {
-  websocket,
-}) {
+export const BroadcastJoin = fx(function UpdateSettingsFX(
+  _dispatch,
+  { websocket },
+) {
   return sendMessage(websocket, 'client:new');
 });
 
-export const StartTimer = fx(function StartTimerFX(_dispatch, {
-  websocket,
-  timerDuration,
-}) {
+export const StartTimer = fx(function StartTimerFX(
+  _dispatch,
+  { websocket, timerDuration },
+) {
   return sendMessage(websocket, 'timer:start', { timerDuration });
 });
 
-export const PauseTimer = fx(function StartTimerFX(_dispatch, {
-  websocket,
-  timerDuration,
-}) {
+export const PauseTimer = fx(function StartTimerFX(
+  _dispatch,
+  { websocket, timerDuration },
+) {
   return sendMessage(websocket, 'timer:pause', { timerDuration });
 });
 
-export const CompleteTimer = fx(function CompleteTimerFX(_dispatch, {
-  websocket,
-}) {
+export const CompleteTimer = fx(function CompleteTimerFX(
+  _dispatch,
+  { websocket },
+) {
   return sendMessage(websocket, 'timer:complete');
 });
 
-export const UpdateGoals = fx(function UpdateGoalsFX(_dispatch, {
-  websocket,
-  goals,
-}) {
-  websocket.send(JSON.stringify({
-    type: 'goals:update',
-    goals,
-  }));
+export const StartBreakTimer = fx(function StartBreakTimerFX(
+  _dispatch,
+  { websocket },
+) {
+  return sendMessage(websocket, 'break:start-timer');
 });
 
-export const UpdateMob = fx(function UpdateMobFX(_dispatch, {
-  websocket,
-  mob,
-}) {
-  websocket.send(JSON.stringify({
-    type: 'mob:update',
-    mob,
-  }));
+export const FinishBreak = fx(function ResetBreakFX(_dispatch, { websocket }) {
+  return sendMessage(websocket, 'break:finish');
 });
 
-export const NotificationPermission = fx(function NotificationPermissionFX(dispatch, {
-  SetNotificationPermissions,
-  Notification,
-}) {
+export const UpdateGoals = fx(function UpdateGoalsFX(
+  _dispatch,
+  { websocket, goals },
+) {
+  websocket.send(
+    JSON.stringify({
+      type: 'goals:update',
+      goals,
+    }),
+  );
+});
+
+export const UpdateMob = fx(function UpdateMobFX(
+  _dispatch,
+  { websocket, mob },
+) {
+  websocket.send(
+    JSON.stringify({
+      type: 'mob:update',
+      mob,
+    }),
+  );
+});
+
+export const NotificationPermission = fx(function NotificationPermissionFX(
+  dispatch,
+  { SetNotificationPermissions, Notification, documentElement },
+) {
+  const dispatchSetNotificationPermissions = notificationPermissions => {
+    dispatch(SetNotificationPermissions, {
+      notificationPermissions,
+      Notification,
+      documentElement,
+    });
+  };
+
   if (!Notification) {
-    dispatch(SetNotificationPermissions, 'denied');
+    dispatchSetNotificationPermissions('denied');
     return;
   }
 
   Notification.requestPermission()
-    .then((value) => {
-      dispatch(SetNotificationPermissions, value);
-    })
-    .catch((err) => {
-      console.warn('Unable to ask for notification permission', err); // eslint-disable-line no-console
-      dispatch(SetNotificationPermissions, '');
+    .then(dispatchSetNotificationPermissions)
+    .catch(() => {
+      // eslint-disable-next-line no-console
+      dispatchSetNotificationPermissions('denied');
     });
 });
 
-
-export const Notify = fx(function NotifyFX(_dispatch, {
-  title,
-  text,
-  notification = true,
-  sound = false,
-  Notification,
-  documentElement,
-}) {
+export const Notify = fx(function NotifyFX(
+  _dispatch,
+  {
+    title,
+    text,
+    notification = true,
+    sound = false,
+    Notification,
+    documentElement,
+  },
+) {
   if (notification && Notification) {
-    const n = new Notification(title, { // eslint-disable-line no-new
+    // eslint-disable-next-line no-new
+    new Notification(title, {
       body: text,
       vibrate: [100, 100, 100],
     });
@@ -104,16 +132,14 @@ export const Notify = fx(function NotifyFX(_dispatch, {
   }
 });
 
-
-export const UpdateTitleWithTime = fx(function UpdateTitleWithTimeFX(_dispatch, {
-  remainingTime,
-  documentElement,
-}) {
-  documentElement.title = remainingTime > 0 // eslint-disable-line no-param-reassign
-    ? `${formatTime(remainingTime)} - mobtime`
-    : 'mobtime';
+export const UpdateTitleWithTime = fx(function UpdateTitleWithTimeFX(
+  _dispatch,
+  { remainingTime, documentElement },
+) {
+  // eslint-disable-next-line no-param-reassign
+  documentElement.title =
+    remainingTime > 0 ? `${formatTime(remainingTime)} - mobtime` : 'mobtime';
 });
-
 
 export const andThen = fx(function andThenFX(dispatch, { action, props }) {
   dispatch(action, props);
