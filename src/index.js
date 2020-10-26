@@ -18,7 +18,7 @@ app({
     Storage.store(state);
 
     return [
-      Http(Storage, Action, 'localhost', port),
+      Http(Storage, Action, '0.0.0.0', port),
       ...state.connections.map((connection) => (
         Websocket(Action, connection.getWebsocket, connection.timerId)
       )),
